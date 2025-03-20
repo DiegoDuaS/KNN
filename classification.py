@@ -44,10 +44,12 @@ def metrics_and_cm(y_pred, y_test):
     plt.title("Confusion Matrix")
     plt.show()
     
+from sklearn.preprocessing import LabelEncoder
+
 def trans_categorical(df):
     df = df.copy()  # Evitar modificar el dataframe original
     
-    # Definir las variables categóricas a transformar
+    # Definir las variables ordinales a transformar
     ordinal_mappings = {
         'ExterQual': {'Fa': 1, 'TA': 2, 'Gd': 3, 'Ex': 4},
         'ExterCond': {'Po': 1, 'Fa': 2, 'TA': 3, 'Gd': 4, 'Ex': 5},
@@ -62,18 +64,24 @@ def trans_categorical(df):
     
     # Para las variables ordinales, utilizamos el mapeo definido
     for col, mapping in ordinal_mappings.items():
-        df[col] = df[col].map(mapping).fillna(0)
+        if col in df.columns:
+            df[col] = df[col].map(mapping).fillna(0)
     
     # Variables nominales -> Label Encoding
     nominal_cols = [
         'MSZoning', 'Street', 'LandContour', 'Utilities', 'LandSlope',
         'Condition1', 'Condition2', 'RoofMatl', 'BsmtCond', 'BsmtExposure',
         'Heating', 'CentralAir', 'Electrical', 'Functional', 'GarageQual',
-        'GarageCond', 'PavedDrive', 'MiscFeature', 'SaleType', 'SaleCondition'
+        'GarageCond', 'PavedDrive', 'MiscFeature', 'SaleType', 'SaleCondition', 'Neighborhood',
+        'LotShape', 'LotConfig', 'BldgType', 'HouseStyle', 'RoofStyle', 'Exterior1st', 
+        'Exterior2nd', 'Foundation', 'BsmtFinType1', 'BsmtFinType2', 'GarageType'
     ]
     
+    # Aplicar Label Encoding a las columnas nominales que sean de tipo 'object'
+    label_encoder = LabelEncoder()
     for col in nominal_cols:
-        if df[col].dtype == 'object':  # Solo aplicar si es tipo 'object'
-            df[col] = LabelEncoder().fit_transform(df[col].astype(str))  # Convertir a int
+        if col in df.columns and df[col].dtype == 'object':  # Solo aplicar si es tipo 'object'
+            df[col] = df[col].fillna('Missing')  # Asegurarse de que no haya valores nulos
+            df[col] = label_encoder.fit_transform(df[col])
     
     return df
